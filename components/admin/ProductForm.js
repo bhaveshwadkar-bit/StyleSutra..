@@ -14,6 +14,7 @@ export default function ProductForm({ sections, initialProduct }) {
   const [compareAtPrice, setCompareAtPrice] = useState(initialProduct?.compare_at_price || "");
   const [stock, setStock] = useState(initialProduct?.stock ?? 100);
   const [isActive, setIsActive] = useState(initialProduct?.is_active ?? true);
+  const [isFeatured, setIsFeatured] = useState(initialProduct?.is_featured ?? false);
   const [photos, setPhotos] = useState(initialProduct?.photos || []);
   const [videos, setVideos] = useState(initialProduct?.videos || []);
 
@@ -26,12 +27,16 @@ export default function ProductForm({ sections, initialProduct }) {
       setError("Add at least 1 photo.");
       return;
     }
+    if (compareAtPrice && Number(compareAtPrice) <= Number(price)) {
+      setError("Compare-at price must be higher than the actual price, otherwise no discount would show.");
+      return;
+    }
     setSaving(true);
     setError("");
     const payload = {
       name, section_id: sectionId || null, description,
       price: Number(price), compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
-      stock: Number(stock), is_active: isActive, photos, videos
+      stock: Number(stock), is_active: isActive, is_featured: isFeatured, photos, videos
     };
     try {
       const url = isEdit ? `/api/admin/products/${initialProduct.id}` : "/api/admin/products";
@@ -102,6 +107,13 @@ export default function ProductForm({ sections, initialProduct }) {
             <option value="hidden">Hidden</option>
           </select>
         </div>
+      </div>
+
+      <div className="field">
+        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+          <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} style={{ width: "auto" }} />
+          Show in "Featured" row on homepage
+        </label>
       </div>
 
       <MediaUploader photos={photos} setPhotos={setPhotos} videos={videos} setVideos={setVideos} />

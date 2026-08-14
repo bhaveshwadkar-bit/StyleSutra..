@@ -15,7 +15,11 @@ export default function SettingsForm({ initialSettings }) {
     upi_id: s.upi_id || "",
     qr_image_url: s.qr_image_url || "",
     payment_window_minutes: s.payment_window_minutes ?? 10,
-    payment_message: s.payment_message || ""
+    payment_message: s.payment_message || "",
+    delivery_charge_text: s.delivery_charge_text || "Delivery charge: ₹49 (FREE above ₹999)",
+    delivery_charge_amount: s.delivery_charge_amount ?? 49,
+    free_delivery_min_order: s.free_delivery_min_order ?? 999,
+    low_stock_threshold: s.low_stock_threshold ?? 5
   });
   const [uploadingQr, setUploadingQr] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -128,6 +132,52 @@ export default function SettingsForm({ initialSettings }) {
       <div className="field">
         <label>Payment Instructions Message (shown to customer during checkout)</label>
         <textarea rows={4} value={form.payment_message} onChange={(e) => update("payment_message", e.target.value)} />
+      </div>
+
+      <h3>Delivery Charges</h3>
+      <div className="field">
+        <label>Delivery Message (shown to customers — write anything you like)</label>
+        <input
+          value={form.delivery_charge_text}
+          onChange={(e) => update("delivery_charge_text", e.target.value)}
+          placeholder="e.g. Delivery charge: ₹49 (FREE above ₹999)"
+        />
+        <p className="hint">This text is free-form — you can type any message, numbers, or symbols here.</p>
+      </div>
+      <div className="field-row">
+        <div className="field">
+          <label>Delivery Charge Amount (₹)</label>
+          <input
+            type="number"
+            min="0"
+            value={form.delivery_charge_amount}
+            onChange={(e) => update("delivery_charge_amount", e.target.value)}
+          />
+          <p className="hint">Added to the order total when below the free-delivery amount.</p>
+        </div>
+        <div className="field">
+          <label>Free Delivery Above (₹)</label>
+          <input
+            type="number"
+            min="0"
+            value={form.free_delivery_min_order}
+            onChange={(e) => update("free_delivery_min_order", e.target.value)}
+          />
+          <p className="hint">Set to 0 to always charge delivery.</p>
+        </div>
+      </div>
+
+      <h3>Stock</h3>
+      <div className="field">
+        <label>Low Stock Warning Threshold</label>
+        <input
+          type="number"
+          min="1"
+          value={form.low_stock_threshold}
+          onChange={(e) => update("low_stock_threshold", e.target.value)}
+          style={{ maxWidth: 140 }}
+        />
+        <p className="hint">Shows "Only X left!" on a product when its stock drops to this number or below.</p>
       </div>
 
       {error && <p className="error-text">{error}</p>}

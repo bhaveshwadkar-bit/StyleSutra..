@@ -13,6 +13,7 @@ export default function Header({ siteName = "Style Sutra" }) {
         </Link>
         <nav className="nav-links">
           <Link href="/">Shop</Link>
+          <Link href="/track">Track Order</Link>
           <Link href="/support">Support</Link>
           <Link href="/cart" className="cart-pill">🛍 Cart ({totalQty})</Link>
         </nav>

@@ -29,6 +29,18 @@ export default function OrdersManager({ initialOrders }) {
     if (res.ok) setOrders((prev) => prev.map((o) => (o.id === id ? data.order : o)));
   }
 
+  async function deleteOrder(id, orderNumber) {
+    if (!confirm(`Permanently delete order ${orderNumber}? This cannot be undone.`)) return;
+    const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+      setExpandedId(null);
+    } else {
+      alert(data.error || "Could not delete this order.");
+    }
+  }
+
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
   return (
@@ -64,13 +76,14 @@ export default function OrdersManager({ initialOrders }) {
                       <p><strong>Delivery Address:</strong> {o.address_line}, {o.city}, {o.state} - {o.pincode}</p>
                       {o.customer_email && <p><strong>Email:</strong> {o.customer_email}</p>}
                       {o.coupon_code && <p><strong>Coupon:</strong> {o.coupon_code} (−{formatINR(o.discount)})</p>}
+                      {o.delivery_charge > 0 && <p><strong>Delivery Charge:</strong> {formatINR(o.delivery_charge)}</p>}
                       <p><strong>Items:</strong></p>
                       <ul>
                         {o.items.map((i, idx) => (
                           <li key={idx}>{i.name} × {i.qty} — {formatINR(i.price * i.qty)}</li>
                         ))}
                       </ul>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10 }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
                         <label style={{ fontWeight: 600, fontSize: 13.5 }}>Update Status:</label>
                         <select
                           value={o.status}
@@ -80,7 +93,20 @@ export default function OrdersManager({ initialOrders }) {
                         >
                           {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
                         </select>
+                        {["delivered", "cancelled", "expired"].includes(o.status) && (
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={(e) => { e.stopPropagation(); deleteOrder(o.id, o.order_number); }}
+                          >
+                            Delete Order
+                          </button>
+                        )}
                       </div>
+                      {!["delivered", "cancelled", "expired"].includes(o.status) && (
+                        <p className="hint" style={{ marginTop: 6 }}>
+                          Orders can only be deleted once they're delivered, cancelled, or expired.
+                        </p>
+                      )}
                     </div>
                   </td>
                 </tr>

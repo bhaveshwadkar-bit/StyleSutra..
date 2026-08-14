@@ -21,6 +21,8 @@ export default async function SectionPage({ params }) {
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
+  const { data: settings } = await supabase.from("settings").select("low_stock_threshold").eq("id", 1).single();
+
   return (
     <main className="container" style={{ padding: "40px 20px" }}>
       <h1 className="font-display" style={{ marginBottom: 20 }}>{section.name}</h1>
@@ -29,7 +31,7 @@ export default async function SectionPage({ params }) {
       ) : (
         <div className="product-grid">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} lowStockThreshold={settings?.low_stock_threshold ?? 5} />
           ))}
         </div>
       )}
