@@ -17,9 +17,8 @@ jobs:
         run: |
           find . -maxdepth 1 -name "*.zip" -exec unzip -o {} \;
           if [ -d "stylesutra" ]; then
-            shopt -s dotglob
-            mv stylesutra/* .
-            rmdir stylesutra
+            cp -rf stylesutra/. .
+            rm -rf stylesutra
           fi
           find . -maxdepth 1 -name "*.zip" -delete
       - name: Commit extracted files
@@ -28,4 +27,3 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Auto-unzip project" || echo "Nothing to commit"
-          git push
