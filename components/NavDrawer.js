@@ -8,6 +8,7 @@ export default function NavDrawer() {
   const [sections, setSections] = useState([]);
   const [settings, setSettings] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     if (!open || loaded) return;
@@ -20,6 +21,12 @@ export default function NavDrawer() {
       setLoaded(true);
     });
   }, [open, loaded]);
+
+  const topLevel = sections.filter((s) => !s.parent_id);
+  const childrenOf = (id) => sections.filter((s) => s.parent_id === id);
+
+  // Only treat a contact field as present if it has real, non-whitespace content.
+  const has = (val) => typeof val === "string" && val.trim().length > 0;
 
   return (
     <>
@@ -41,28 +48,56 @@ export default function NavDrawer() {
               <Link href="/support" onClick={() => setOpen(false)}>Support</Link>
             </nav>
 
-            {sections.length > 0 && (
-              <div className="drawer-section">
-                <p className="drawer-section-title">Shop by Category</p>
-                {sections.map((s) => (
-                  <Link key={s.id} href={`/sections/${s.slug}`} onClick={() => setOpen(false)}>
-                    {s.name}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <div className="drawer-section">
+              <p className="drawer-section-title">Shop by Category</p>
+              {!loaded && <p className="hint">Loading…</p>}
+              {loaded && topLevel.length === 0 && (
+                <p className="hint">No categories added yet.</p>
+              )}
+              {topLevel.map((s) => {
+                const kids = childrenOf(s.id);
+                const isExpanded = expandedId === s.id;
+                return (
+                  <div key={s.id} className="drawer-category">
+                    <div className="drawer-category-row">
+                      <Link href={`/sections/${s.slug}`} onClick={() => setOpen(false)}>
+                        {s.name}
+                      </Link>
+                      {kids.length > 0 && (
+                        <button
+                          className="drawer-expand-btn"
+                          onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                          aria-label={isExpanded ? "Collapse" : "Expand"}
+                        >
+                          {isExpanded ? "−" : "+"}
+                        </button>
+                      )}
+                    </div>
+                    {isExpanded && kids.length > 0 && (
+                      <div className="drawer-subcategory-list">
+                        {kids.map((child) => (
+                          <Link key={child.id} href={`/sections/${child.slug}`} onClick={() => setOpen(false)}>
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-            {settings && (
+            {settings && (has(settings.support_phone_1) || has(settings.support_email) || has(settings.instagram_id) || has(settings.whatsapp_1)) && (
               <div className="drawer-section">
                 <p className="drawer-section-title">Get in Touch</p>
-                {settings.support_phone_1 && <a href={`tel:${settings.support_phone_1}`}>📞 {settings.support_phone_1}</a>}
-                {settings.support_email && <a href={`mailto:${settings.support_email}`}>✉️ {settings.support_email}</a>}
-                {settings.instagram_id && (
+                {has(settings.support_phone_1) && <a href={`tel:${settings.support_phone_1}`}>📞 {settings.support_phone_1}</a>}
+                {has(settings.support_email) && <a href={`mailto:${settings.support_email}`}>✉️ {settings.support_email}</a>}
+                {has(settings.instagram_id) && (
                   <a href={`https://instagram.com/${settings.instagram_id.replace("@", "")}`} target="_blank" rel="noreferrer">
                     📷 {settings.instagram_id}
                   </a>
                 )}
-                {settings.whatsapp_1 && (
+                {has(settings.whatsapp_1) && (
                   <a href={`https://wa.me/${settings.whatsapp_1.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
                     💬 WhatsApp: {settings.whatsapp_1}
                   </a>

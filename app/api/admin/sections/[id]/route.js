@@ -9,7 +9,7 @@ export async function PUT(request, { params }) {
   if (!isAdminAuthed()) return Response.json({ error: "Not authorized" }, { status: 401 });
   const body = await request.json();
   const { data, error } = await supabaseAdmin.from("sections").update({
-    name: body.name, slug: slugify(body.name), sort_order: body.sort_order
+    name: body.name, slug: slugify(body.name), sort_order: body.sort_order, parent_id: body.parent_id ?? null
   }).eq("id", params.id).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ section: data });

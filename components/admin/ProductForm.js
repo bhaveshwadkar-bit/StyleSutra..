@@ -75,7 +75,16 @@ export default function ProductForm({ sections, initialProduct }) {
         <label>Section</label>
         <select value={sectionId} onChange={(e) => setSectionId(e.target.value)}>
           <option value="">— No section —</option>
-          {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          {sections
+            .filter((s) => !s.parent_id)
+            .flatMap((parent) => [
+              <option key={parent.id} value={parent.id}>{parent.name}</option>,
+              ...sections
+                .filter((c) => c.parent_id === parent.id)
+                .map((child) => (
+                  <option key={child.id} value={child.id}>&nbsp;&nbsp;&nbsp;↳ {child.name}</option>
+                ))
+            ])}
         </select>
       </div>
 
