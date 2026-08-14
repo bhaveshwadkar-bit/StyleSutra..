@@ -15,6 +15,7 @@ export default function ProductDetailClient({ product, initialReviews, lowStockT
   const [qty, setQty] = useState(1);
   const [toast, setToast] = useState("");
   const [reviews, setReviews] = useState(initialReviews);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStartX = useRef(null);
 
   const active = media[activeIdx];
@@ -60,7 +61,7 @@ export default function ProductDetailClient({ product, initialReviews, lowStockT
             {active?.type === "video" ? (
               <video key={active.url} src={active.url} controls autoPlay muted loop playsInline />
             ) : active ? (
-              <img key={active.url} src={active.url} alt={product.name} />
+              <img key={active.url} src={active.url} alt={product.name} onClick={() => setLightboxOpen(true)} style={{ cursor: "zoom-in" }} />
             ) : (
               <div style={{ width: "100%", height: "100%" }} />
             )}
@@ -92,6 +93,9 @@ export default function ProductDetailClient({ product, initialReviews, lowStockT
               ))}
             </div>
           )}
+          {active?.type !== "video" && (
+            <p className="hint" style={{ textAlign: "center", marginTop: 6 }}>Tap photo to view full size</p>
+          )}
         </div>
 
         <div>
@@ -106,7 +110,7 @@ export default function ProductDetailClient({ product, initialReviews, lowStockT
               </span>
             </div>
           )}
-          <p style={{ fontSize: 24, fontWeight: 700, color: "var(--rose-gold-dark)" }}>
+          <p className="price" style={{ fontSize: 24, fontWeight: 700, color: "var(--rose-gold-dark)" }}>
             {formatINR(product.price)}
             {product.compare_at_price > product.price && (
               <>
@@ -144,6 +148,37 @@ export default function ProductDetailClient({ product, initialReviews, lowStockT
       <ReviewsSection productId={product.id} reviews={reviews} setReviews={setReviews} />
 
       {toast && <div className="toast">{toast}</div>}
+
+      {lightboxOpen && (
+        <div className="lightbox-overlay" onClick={() => setLightboxOpen(false)}>
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close">×</button>
+          <div
+            className="lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {active?.type === "video" ? (
+              <video key={active.url} src={active.url} controls autoPlay playsInline />
+            ) : (
+              <img key={active.url} src={active.url} alt={product.name} />
+            )}
+            {media.length > 1 && (
+              <>
+                <button className="gallery-nav-btn prev" onClick={(e) => { e.stopPropagation(); goTo(activeIdx - 1); }} aria-label="Previous">‹</button>
+                <button className="gallery-nav-btn next" onClick={(e) => { e.stopPropagation(); goTo(activeIdx + 1); }} aria-label="Next">›</button>
+              </>
+            )}
+          </div>
+          {media.length > 1 && (
+            <div className="gallery-dots" style={{ marginTop: 14 }}>
+              {media.map((_, i) => (
+                <span key={i} className={i === activeIdx ? "active" : ""} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 }
