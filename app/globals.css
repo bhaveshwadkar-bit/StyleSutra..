@@ -305,6 +305,7 @@ table.admin-table img { width: 44px; height: 44px; object-fit: cover; border-rad
 }
 .drawer-panel {
   width: 82%; max-width: 320px; height: 100%; background: var(--cream);
+  color: var(--charcoal);
   padding: 20px; overflow-y: auto; box-shadow: 8px 0 24px rgba(0,0,0,0.25);
   animation: slideIn 0.2s ease;
 }
@@ -312,7 +313,7 @@ table.admin-table img { width: 44px; height: 44px; object-fit: cover; border-rad
 .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .drawer-close { background: none; border: none; font-size: 26px; color: var(--charcoal); line-height: 1; }
 .drawer-links { display: flex; flex-direction: column; gap: 2px; margin-bottom: 20px; }
-.drawer-links a { padding: 10px 4px; font-weight: 600; border-bottom: 1px solid var(--line); }
+.drawer-links a { display: block; padding: 10px 4px; font-weight: 600; color: var(--charcoal); border-bottom: 1px solid var(--line); }
 .drawer-section { margin-bottom: 22px; }
 .drawer-section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; margin: 0 0 8px; }
 .drawer-section a { display: block; padding: 8px 4px; font-size: 14.5px; color: var(--charcoal); }

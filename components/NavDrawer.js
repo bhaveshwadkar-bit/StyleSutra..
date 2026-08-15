@@ -7,6 +7,7 @@ export default function NavDrawer() {
   const [open, setOpen] = useState(false);
   const [sections, setSections] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [menuLinks, setMenuLinks] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
 
@@ -14,10 +15,12 @@ export default function NavDrawer() {
     if (!open || loaded) return;
     Promise.all([
       supabase.from("sections").select("*").order("sort_order"),
-      supabase.from("settings").select("*").eq("id", 1).single()
-    ]).then(([sectionsRes, settingsRes]) => {
+      supabase.from("settings").select("*").eq("id", 1).single(),
+      supabase.from("menu_links").select("*").order("sort_order")
+    ]).then(([sectionsRes, settingsRes, linksRes]) => {
       setSections(sectionsRes.data || []);
       setSettings(settingsRes.data || null);
+      setMenuLinks(linksRes.data || []);
       setLoaded(true);
     });
   }, [open, loaded]);
@@ -43,9 +46,14 @@ export default function NavDrawer() {
             </div>
 
             <nav className="drawer-links">
-              <Link href="/" onClick={() => setOpen(false)}>Shop All</Link>
-              <Link href="/track" onClick={() => setOpen(false)}>Track Order</Link>
-              <Link href="/support" onClick={() => setOpen(false)}>Support</Link>
+              {menuLinks.length === 0 && !loaded && <p className="hint">Loading…</p>}
+              {menuLinks.map((link) =>
+                link.url.startsWith("http") ? (
+                  <a key={link.id} href={link.url} target="_blank" rel="noreferrer">{link.label}</a>
+                ) : (
+                  <Link key={link.id} href={link.url} onClick={() => setOpen(false)}>{link.label}</Link>
+                )
+              )}
             </nav>
 
             <div className="drawer-section">
