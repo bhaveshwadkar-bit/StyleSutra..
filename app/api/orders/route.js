@@ -46,21 +46,11 @@ export async function POST(request) {
     }
   }
 
-  const afterDiscount = Math.max(0, subtotal - discount);
+  const total = Math.max(0, subtotal - discount);
 
-  const { data: settings } = await supabaseAdmin
-    .from("settings")
-    .select("payment_window_minutes, delivery_charge_amount, free_delivery_min_order")
-    .eq("id", 1)
-    .single();
+  const { data: settings } = await supabaseAdmin.from("settings").select("payment_window_minutes").eq("id", 1).single();
   const windowMin = settings?.payment_window_minutes ?? 10;
   const payment_deadline = new Date(Date.now() + windowMin * 60 * 1000).toISOString();
-
-  const freeDeliveryMin = Number(settings?.free_delivery_min_order ?? 0);
-  const deliveryChargeAmount = Number(settings?.delivery_charge_amount ?? 0);
-  const deliveryCharge = freeDeliveryMin > 0 && afterDiscount >= freeDeliveryMin ? 0 : deliveryChargeAmount;
-
-  const total = afterDiscount + deliveryCharge;
 
   const order_number = generateOrderNumber();
 
@@ -72,7 +62,6 @@ export async function POST(request) {
       subtotal,
       discount,
       coupon_code: appliedCode,
-      delivery_charge: deliveryCharge,
       total,
       customer_name, customer_phone, customer_email,
       address_line, city, state, pincode,

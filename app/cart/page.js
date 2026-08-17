@@ -1,22 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { formatINR } from "@/lib/format";
 
 export default function CartPage() {
   const { items, updateQty, removeItem, subtotal } = useCart();
-  const [settings, setSettings] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((d) => setSettings(d.settings))
-      .catch(() => {});
-  }, []);
-
-  const freeDeliveryMin = Number(settings?.free_delivery_min_order ?? 0);
-  const amountToFreeDelivery = freeDeliveryMin > 0 ? Math.max(0, freeDeliveryMin - subtotal) : 0;
 
   if (items.length === 0) {
     return (
@@ -60,14 +48,6 @@ export default function CartPage() {
             <span>Subtotal</span>
             <strong>{formatINR(subtotal)}</strong>
           </div>
-          {settings?.delivery_charge_text && (
-            <p className="hint">{settings.delivery_charge_text}</p>
-          )}
-          {amountToFreeDelivery > 0 && (
-            <p style={{ color: "var(--rose-gold-dark)", fontSize: 13, fontWeight: 600 }}>
-              Add {formatINR(amountToFreeDelivery)} more for FREE delivery!
-            </p>
-          )}
           <p className="hint">Coupon codes can be applied at checkout.</p>
           <Link href="/checkout" className="btn btn-primary btn-block" style={{ marginTop: 14 }}>
             Proceed to Checkout

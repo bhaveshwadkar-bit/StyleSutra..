@@ -15,11 +15,7 @@ export async function PUT(request) {
     upi_id: body.upi_id,
     qr_image_url: body.qr_image_url,
     payment_window_minutes: body.payment_window_minutes,
-    payment_message: body.payment_message,
-    delivery_charge_text: body.delivery_charge_text,
-    delivery_charge_amount: body.delivery_charge_amount,
-    free_delivery_min_order: body.free_delivery_min_order,
-    low_stock_threshold: body.low_stock_threshold
+    payment_message: body.payment_message
   }).eq("id", 1).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ settings: data });

@@ -22,7 +22,6 @@ create table if not exists products (
   compare_at_price numeric(10,2),
   stock int default 100,
   is_active boolean default true,
-  is_featured boolean default false,
   photos jsonb default '[]',   -- array of {url, public_id}
   videos jsonb default '[]',   -- array of {url, public_id}
   created_at timestamptz default now(),
@@ -49,7 +48,6 @@ create table if not exists orders (
   subtotal numeric(10,2) not null,
   discount numeric(10,2) default 0,
   coupon_code text,
-  delivery_fee numeric(10,2) default 0,
   total numeric(10,2) not null,
   customer_name text not null,
   customer_phone text not null,
@@ -88,9 +86,6 @@ create table if not exists settings (
   upi_id text default '8591097540@idfcfirst',
   qr_image_url text default '',
   payment_window_minutes int default 10,
-  delivery_charge numeric(10,2) default 0,
-  free_delivery_threshold numeric(10,2) default 0,
-  delivery_message text default 'Free delivery on all orders!',
   payment_message text default 'Hello sir/ma''am, please share your payment screenshot to this number or Instagram ID so we can place your order within 24hr. We will also call you for confirmation. Thank you for your understanding 😊',
   check (id = 1)
 );

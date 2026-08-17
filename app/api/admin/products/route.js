@@ -23,7 +23,6 @@ export async function POST(request) {
     compare_at_price: body.compare_at_price || null,
     stock: body.stock ?? 100,
     is_active: body.is_active ?? true,
-    is_featured: body.is_featured ?? false,
     photos: body.photos || [],
     videos: body.videos || []
   }).select().single();

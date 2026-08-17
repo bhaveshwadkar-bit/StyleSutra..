@@ -16,13 +16,11 @@ async function getData() {
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
-  const { data: settings } = await supabase.from("settings").select("low_stock_threshold").eq("id", 1).single();
-
-  return { sections: sections || [], products: products || [], lowStockThreshold: settings?.low_stock_threshold ?? 5 };
+  return { sections: sections || [], products: products || [] };
 }
 
 export default async function HomePage() {
-  const { sections, products, lowStockThreshold } = await getData();
+  const { sections, products } = await getData();
 
   return (
     <main>
@@ -36,23 +34,6 @@ export default async function HomePage() {
           <div className="empty-state">No sections yet. Add some from the admin panel.</div>
         )}
 
-        {(() => {
-          const featured = products.filter((p) => p.is_featured);
-          if (featured.length === 0) return null;
-          return (
-            <section>
-              <div className="section-title">
-                <h2>✨ Featured</h2>
-              </div>
-              <div className="product-grid">
-                {featured.slice(0, 8).map((p) => (
-                  <ProductCard key={p.id} product={p} lowStockThreshold={lowStockThreshold} />
-                ))}
-              </div>
-            </section>
-          );
-        })()}
-
         {sections.map((section) => {
           const sectionProducts = products.filter((p) => p.section_id === section.id);
           if (sectionProducts.length === 0) return null;
@@ -64,7 +45,7 @@ export default async function HomePage() {
               </div>
               <div className="product-grid">
                 {sectionProducts.slice(0, 8).map((p) => (
-                  <ProductCard key={p.id} product={p} lowStockThreshold={lowStockThreshold} />
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </section>
