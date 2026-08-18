@@ -21,5 +21,13 @@ export default async function ProductPage({ params }) {
     .eq("is_approved", true)
     .order("created_at", { ascending: false });
 
-  return <ProductDetailClient product={product} initialReviews={reviews || []} />;
+  const { data: settings } = await supabase.from("settings").select("low_stock_threshold").eq("id", 1).single();
+
+  return (
+    <ProductDetailClient
+      product={product}
+      initialReviews={reviews || []}
+      lowStockThreshold={settings?.low_stock_threshold ?? 5}
+    />
+  );
 }

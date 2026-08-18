@@ -1,11 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { formatINR } from "@/lib/format";
 import StarRating from "@/components/StarRating";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
-export default function ProductDetailClient({ product, initialReviews }) {
+export default function ProductDetailClient({ product, initialReviews, lowStockThreshold = 5 }) {
   const { addItem } = useCart();
   const media = [
     ...(product.photos || []).map((m) => ({ ...m, type: "image" })),
@@ -15,11 +15,33 @@ export default function ProductDetailClient({ product, initialReviews }) {
   const [qty, setQty] = useState(1);
   const [toast, setToast] = useState("");
   const [reviews, setReviews] = useState(initialReviews);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const touchStartX = useRef(null);
 
   const active = media[activeIdx];
   const avgRating = reviews.length
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : 0;
+
+  const inStock = product.stock == null || product.stock > 0;
+  const lowStock = product.stock != null && product.stock > 0 && product.stock <= lowStockThreshold;
+
+  function goTo(idx) {
+    if (media.length === 0) return;
+    setActiveIdx((idx + media.length) % media.length);
+  }
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchEnd(e) {
+    if (touchStartX.current == null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 40) {
+      goTo(activeIdx + (delta < 0 ? 1 : -1));
+    }
+    touchStartX.current = null;
+  }
 
   function handleAdd() {
     addItem(product, qty);
@@ -31,15 +53,33 @@ export default function ProductDetailClient({ product, initialReviews }) {
     <main className="container" style={{ padding: "32px 20px 0" }}>
       <div className="product-detail">
         <div>
-          <div className="gallery-main">
+          <div
+            className="gallery-main"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {active?.type === "video" ? (
-              <video src={active.url} controls autoPlay muted loop />
+              <video key={active.url} src={active.url} controls autoPlay muted loop playsInline />
             ) : active ? (
-              <img src={active.url} alt={product.name} />
+              <img key={active.url} src={active.url} alt={product.name} onClick={() => setLightboxOpen(true)} style={{ cursor: "zoom-in" }} />
             ) : (
               <div style={{ width: "100%", height: "100%" }} />
             )}
+            {!inStock && <span className="out-of-stock-badge">Out of Stock</span>}
+            {media.length > 1 && (
+              <>
+                <button className="gallery-nav-btn prev" onClick={() => goTo(activeIdx - 1)} aria-label="Previous">‹</button>
+                <button className="gallery-nav-btn next" onClick={() => goTo(activeIdx + 1)} aria-label="Next">›</button>
+              </>
+            )}
           </div>
+          {media.length > 1 && (
+            <div className="gallery-dots">
+              {media.map((_, i) => (
+                <span key={i} className={i === activeIdx ? "active" : ""} />
+              ))}
+            </div>
+          )}
           {media.length > 1 && (
             <div className="gallery-thumbs">
               {media.map((m, i) => (
@@ -48,10 +88,13 @@ export default function ProductDetailClient({ product, initialReviews }) {
                   className={`thumb-btn ${i === activeIdx ? "active" : ""}`}
                   onClick={() => setActiveIdx(i)}
                 >
-                  {m.type === "video" ? <video src={m.url} muted /> : <img src={m.url} alt="" />}
+                  {m.type === "video" ? <video src={m.url} muted playsInline /> : <img src={m.url} alt="" />}
                 </button>
               ))}
             </div>
+          )}
+          {active?.type !== "video" && (
+            <p className="hint" style={{ textAlign: "center", marginTop: 6 }}>Tap photo to view full size</p>
           )}
         </div>
 
@@ -67,33 +110,75 @@ export default function ProductDetailClient({ product, initialReviews }) {
               </span>
             </div>
           )}
-          <p style={{ fontSize: 24, fontWeight: 700, color: "var(--rose-gold-dark)" }}>
+          <p className="price" style={{ fontSize: 24, fontWeight: 700, color: "var(--rose-gold-dark)" }}>
             {formatINR(product.price)}
             {product.compare_at_price > product.price && (
-              <span className="strike" style={{ marginLeft: 10 }}>
-                {formatINR(product.compare_at_price)}
-              </span>
+              <>
+                <span className="strike" style={{ marginLeft: 10 }}>
+                  {formatINR(product.compare_at_price)}
+                </span>
+                <span className="percent-off-badge">
+                  {Math.round((1 - product.price / product.compare_at_price) * 100)}% OFF
+                </span>
+              </>
             )}
           </p>
           <p style={{ color: "var(--text-muted)", whiteSpace: "pre-line" }}>{product.description}</p>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "18px 0" }}>
-            <div className="qty-control">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-              <span>{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)}>+</button>
-            </div>
-            <button className="btn btn-primary" onClick={handleAdd}>
-              Add to Cart
-            </button>
-          </div>
-          <p className="hint">In stock: {product.stock ?? "available"}</p>
+          {!inStock ? (
+            <p className="stock-warning" style={{ margin: "18px 0" }}>Currently out of stock</p>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "18px 0" }}>
+                <div className="qty-control">
+                  <button onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+                  <span>{qty}</span>
+                  <button onClick={() => setQty((q) => q + 1)}>+</button>
+                </div>
+                <button className="btn btn-primary" onClick={handleAdd}>
+                  Add to Cart
+                </button>
+              </div>
+              {lowStock && <p className="stock-warning">Only {product.stock} left in stock!</p>}
+            </>
+          )}
         </div>
       </div>
 
       <ReviewsSection productId={product.id} reviews={reviews} setReviews={setReviews} />
 
       {toast && <div className="toast">{toast}</div>}
+
+      {lightboxOpen && (
+        <div className="lightbox-overlay" onClick={() => setLightboxOpen(false)}>
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close">×</button>
+          <div
+            className="lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {active?.type === "video" ? (
+              <video key={active.url} src={active.url} controls autoPlay playsInline />
+            ) : (
+              <img key={active.url} src={active.url} alt={product.name} />
+            )}
+            {media.length > 1 && (
+              <>
+                <button className="gallery-nav-btn prev" onClick={(e) => { e.stopPropagation(); goTo(activeIdx - 1); }} aria-label="Previous">‹</button>
+                <button className="gallery-nav-btn next" onClick={(e) => { e.stopPropagation(); goTo(activeIdx + 1); }} aria-label="Next">›</button>
+              </>
+            )}
+          </div>
+          {media.length > 1 && (
+            <div className="gallery-dots" style={{ marginTop: 14 }}>
+              {media.map((_, i) => (
+                <span key={i} className={i === activeIdx ? "active" : ""} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 }

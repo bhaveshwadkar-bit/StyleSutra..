@@ -1,11 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function SectionsManager({ initialSections }) {
   const [sections, setSections] = useState(initialSections);
   const [newName, setNewName] = useState("");
+  const [newParentId, setNewParentId] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const topLevel = sections.filter((s) => !s.parent_id);
+  const childrenOf = (id) => sections.filter((s) => s.parent_id === id);
 
   async function addSection(e) {
     e.preventDefault();
@@ -16,12 +20,13 @@ export default function SectionsManager({ initialSections }) {
       const res = await fetch("/api/admin/sections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, sort_order: sections.length + 1 })
+        body: JSON.stringify({ name: newName, sort_order: sections.length + 1, parent_id: newParentId || null })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setSections((prev) => [...prev, data.section]);
       setNewName("");
+      setNewParentId("");
     } catch (err) {
       setError(err.message);
     }
@@ -35,57 +40,72 @@ export default function SectionsManager({ initialSections }) {
       body: JSON.stringify({ name })
     });
     const data = await res.json();
-    if (res.ok) {
-      setSections((prev) => prev.map((s) => (s.id === id ? data.section : s)));
-    }
+    if (res.ok) setSections((prev) => prev.map((s) => (s.id === id ? data.section : s)));
   }
 
   async function deleteSection(id) {
-    if (!confirm("Delete this section? Products in it will become unsectioned.")) return;
+    if (!confirm("Delete this category? Any subcategories under it will also be deleted, and products in it will become uncategorized.")) return;
     const res = await fetch(`/api/admin/sections/${id}`, { method: "DELETE" });
-    if (res.ok) setSections((prev) => prev.filter((s) => s.id !== id));
+    if (res.ok) setSections((prev) => prev.filter((s) => s.id !== id && s.parent_id !== id));
   }
 
   return (
     <div>
-      <form className="card" onSubmit={addSection} style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "flex-end" }}>
-        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label>New Section Name</label>
-          <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Bracelets" />
+      <form className="card" onSubmit={addSection} style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Add Category or Subcategory</h3>
+        <div className="field-row">
+          <div className="field">
+            <label>Name</label>
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Enamel Charms" />
+          </div>
+          <div className="field">
+            <label>Parent Category (optional)</label>
+            <select value={newParentId} onChange={(e) => setNewParentId(e.target.value)}>
+              <option value="">— Top-level category —</option>
+              {topLevel.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <button className="btn btn-primary" disabled={busy}>Add Section</button>
+        <p className="hint">
+          Leave "Parent Category" empty to create a main category (like "Charms"). Choose a parent to
+          create a subcategory under it (like "Enamel Charms" under "Charms") — matching how you saw it
+          on the reference site.
+        </p>
+        {error && <p className="error-text">{error}</p>}
+        <button className="btn btn-primary" disabled={busy}>Add</button>
       </form>
-      {error && <p className="error-text">{error}</p>}
 
-      <table className="admin-table">
-        <thead>
-          <tr><th>Name</th><th>Slug</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          {sections.map((s) => (
-            <SectionRow key={s.id} section={s} onRename={renameSection} onDelete={deleteSection} />
-          ))}
-        </tbody>
-      </table>
+      {topLevel.map((section) => (
+        <div key={section.id} className="card" style={{ marginBottom: 14 }}>
+          <SectionRow section={section} onRename={renameSection} onDelete={deleteSection} isParent />
+          {childrenOf(section.id).length > 0 && (
+            <div style={{ marginLeft: 22, marginTop: 8, borderLeft: "2px solid var(--line)", paddingLeft: 14 }}>
+              {childrenOf(section.id).map((child) => (
+                <SectionRow key={child.id} section={child} onRename={renameSection} onDelete={deleteSection} />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      {topLevel.length === 0 && <p className="hint">No categories yet — add one above.</p>}
     </div>
   );
 }
 
-function SectionRow({ section, onRename, onDelete }) {
+function SectionRow({ section, onRename, onDelete, isParent }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(section.name);
 
   return (
-    <tr>
-      <td>
-        {editing ? (
-          <input value={name} onChange={(e) => setName(e.target.value)} style={{ padding: 6, border: "1px solid var(--line)", borderRadius: 6 }} />
-        ) : (
-          section.name
-        )}
-      </td>
-      <td>{section.slug}</td>
-      <td style={{ display: "flex", gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
+      {editing ? (
+        <input value={name} onChange={(e) => setName(e.target.value)} style={{ padding: 6, border: "1px solid var(--line)", borderRadius: 6, flex: 1, marginRight: 10 }} />
+      ) : (
+        <span style={{ fontWeight: isParent ? 700 : 500 }}>{section.name}</span>
+      )}
+      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
         {editing ? (
           <>
             <button className="btn btn-sm btn-primary" onClick={() => { onRename(section.id, name); setEditing(false); }}>Save</button>
@@ -97,7 +117,7 @@ function SectionRow({ section, onRename, onDelete }) {
             <button className="btn btn-sm btn-danger" onClick={() => onDelete(section.id)}>Delete</button>
           </>
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }

@@ -17,7 +17,7 @@ export async function POST(request) {
   const body = await request.json();
   const slug = slugify(body.name);
   const { data, error } = await supabaseAdmin.from("sections").insert({
-    name: body.name, slug, sort_order: body.sort_order ?? 99
+    name: body.name, slug, sort_order: body.sort_order ?? 99, parent_id: body.parent_id || null
   }).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ section: data });

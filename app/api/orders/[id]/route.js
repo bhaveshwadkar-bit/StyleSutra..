@@ -56,3 +56,23 @@ export async function PATCH(request, { params }) {
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ order: data });
 }
+
+export async function DELETE(request, { params }) {
+  if (!isAdminAuthed()) return Response.json({ error: "Not authorized" }, { status: 401 });
+
+  const { data: order } = await supabaseAdmin.from("orders").select("status").eq("id", params.id).single();
+  if (!order) return Response.json({ error: "Order not found" }, { status: 404 });
+
+  // Safety guard: only allow deleting orders that are finished/dead, never active ones.
+  const deletable = ["delivered", "cancelled", "expired"];
+  if (!deletable.includes(order.status)) {
+    return Response.json(
+      { error: "Only delivered, cancelled, or expired orders can be deleted." },
+      { status: 400 }
+    );
+  }
+
+  const { error } = await supabaseAdmin.from("orders").delete().eq("id", params.id);
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+  return Response.json({ ok: true });
+}

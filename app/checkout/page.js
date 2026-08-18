@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
@@ -19,6 +19,14 @@ export default function CheckoutPage() {
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings))
+      .catch(() => {});
+  }, []);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -45,7 +53,12 @@ export default function CheckoutPage() {
   }
 
   const discount = coupon?.discount || 0;
-  const total = Math.max(0, subtotal - discount);
+  const afterDiscount = Math.max(0, subtotal - discount);
+  const freeDeliveryMin = Number(settings?.free_delivery_min_order ?? 0);
+  const deliveryChargeAmount = Number(settings?.delivery_charge_amount ?? 0);
+  const deliveryCharge = freeDeliveryMin > 0 && afterDiscount >= freeDeliveryMin ? 0 : deliveryChargeAmount;
+  const total = afterDiscount + deliveryCharge;
+  const amountToFreeDelivery = freeDeliveryMin > 0 ? Math.max(0, freeDeliveryMin - afterDiscount) : 0;
 
   async function placeOrder(e) {
     e.preventDefault();
@@ -128,6 +141,9 @@ export default function CheckoutPage() {
           <button className="btn btn-primary btn-block" disabled={submitting}>
             {submitting ? "Placing Order…" : `Place Order — ${formatINR(total)}`}
           </button>
+          <p className="hint" style={{ textAlign: "center", marginTop: 8 }}>
+            Includes {formatINR(deliveryCharge)} delivery {deliveryCharge === 0 && "(free)"}
+          </p>
         </form>
 
         <div className="card">
@@ -159,6 +175,18 @@ export default function CheckoutPage() {
             <div style={{ display: "flex", justifyContent: "space-between", margin: "6px 0", color: "var(--success)" }}>
               <span>Discount</span><span>−{formatINR(discount)}</span>
             </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", margin: "6px 0" }}>
+            <span>Delivery</span>
+            <span>{deliveryCharge === 0 ? <span style={{ color: "var(--success)" }}>FREE</span> : formatINR(deliveryCharge)}</span>
+          </div>
+          {settings?.delivery_charge_text && (
+            <p className="hint" style={{ margin: "0 0 6px" }}>{settings.delivery_charge_text}</p>
+          )}
+          {deliveryCharge > 0 && amountToFreeDelivery > 0 && (
+            <p style={{ color: "var(--rose-gold-dark)", fontSize: 13, fontWeight: 600, margin: "0 0 6px" }}>
+              Add {formatINR(amountToFreeDelivery)} more for FREE delivery!
+            </p>
           )}
           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 17, marginTop: 8 }}>
             <span>Total</span><span>{formatINR(total)}</span>
