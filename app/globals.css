@@ -390,3 +390,23 @@ table.admin-table img { width: 44px; height: 44px; object-fit: cover; border-rad
 }
 .drawer-subcategory-list { padding: 4px 0 8px 14px; }
 .drawer-subcategory-list a { font-size: 13.5px; color: var(--text-muted); padding: 6px 4px; }
+
+/* Coming Soon / Maintenance gate */
+.gate-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-soft) 100%);
+  padding: 32px 20px; text-align: center;
+}
+.gate-content { max-width: 420px; }
+.gate-emoji { font-size: 44px; margin: 0 0 6px; }
+.gate-brand { color: var(--cream); font-size: 30px; margin: 0 0 14px; }
+.gate-title { color: var(--champagne); font-size: 20px; font-weight: 600; margin: 0 0 10px; }
+.gate-subtitle { color: #d8cfc2; font-size: 14.5px; line-height: 1.6; margin: 0 0 26px; }
+.gate-countdown { display: flex; justify-content: center; gap: 14px; margin-bottom: 30px; }
+.gate-countdown-unit {
+  background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; min-width: 62px;
+}
+.gate-countdown-unit span { display: block; font-size: 26px; font-weight: 700; color: var(--cream); font-family: "Playfair Display", serif; }
+.gate-countdown-unit label { display: block; font-size: 11px; color: #b3a99a; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+.gate-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+.gate-links a { color: var(--champagne); font-size: 14px; font-weight: 600; }

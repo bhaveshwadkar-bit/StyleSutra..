@@ -24,7 +24,13 @@ export async function PUT(request) {
     hero_title: body.hero_title,
     hero_subtitle: body.hero_subtitle,
     hero_button_text: body.hero_button_text,
-    hero_button_link: body.hero_button_link
+    hero_button_link: body.hero_button_link,
+    launch_gate_enabled: body.launch_gate_enabled,
+    launch_at: body.launch_at,
+    launch_message: body.launch_message,
+    launch_subtext: body.launch_subtext,
+    maintenance_mode_enabled: body.maintenance_mode_enabled,
+    maintenance_message: body.maintenance_message
   }).eq("id", 1).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ settings: data });
