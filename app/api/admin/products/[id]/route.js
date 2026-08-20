@@ -17,6 +17,7 @@ export async function PUT(request, { params }) {
     stock: body.stock,
     is_active: body.is_active,
     is_featured: body.is_featured ?? false,
+    is_best_seller: body.is_best_seller ?? false,
     photos: body.photos || [],
     videos: body.videos || [],
     updated_at: new Date().toISOString()

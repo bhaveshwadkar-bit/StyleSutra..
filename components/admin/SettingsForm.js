@@ -19,8 +19,14 @@ export default function SettingsForm({ initialSettings }) {
     delivery_charge_text: s.delivery_charge_text || "Delivery charge: ₹49 (FREE above ₹999)",
     delivery_charge_amount: s.delivery_charge_amount ?? 49,
     free_delivery_min_order: s.free_delivery_min_order ?? 999,
-    low_stock_threshold: s.low_stock_threshold ?? 5
+    low_stock_threshold: s.low_stock_threshold ?? 5,
+    hero_image_url: s.hero_image_url || "",
+    hero_title: s.hero_title || "Style Sutra",
+    hero_subtitle: s.hero_subtitle || "Handpicked chains, rings, charms & full chains — for him and her.",
+    hero_button_text: s.hero_button_text || "Shop Now",
+    hero_button_link: s.hero_button_link || "/"
   });
+  const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -43,6 +49,21 @@ export default function SettingsForm({ initialSettings }) {
       setError(err.message);
     }
     setUploadingQr(false);
+    e.target.value = "";
+  }
+
+  async function handleHeroUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(true);
+    setError("");
+    try {
+      const result = await uploadToCloudinary(file, { maxMB: 10, resourceType: "image" });
+      update("hero_image_url", result.url);
+    } catch (err) {
+      setError(err.message);
+    }
+    setUploadingHero(false);
     e.target.value = "";
   }
 
@@ -71,6 +92,42 @@ export default function SettingsForm({ initialSettings }) {
       <h3 style={{ marginTop: 0 }}>Store Name</h3>
       <div className="field">
         <input value={form.site_name} onChange={(e) => update("site_name", e.target.value)} />
+      </div>
+
+      <h3>Homepage Hero Banner</h3>
+      <div className="field">
+        <label>Banner Photo</label>
+        <div className="upload-grid">
+          {form.hero_image_url && (
+            <div className="upload-thumb" style={{ width: 120, height: 84 }}>
+              <img src={form.hero_image_url} alt="Hero" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <button type="button" className="remove-btn" onClick={() => update("hero_image_url", "")}>×</button>
+            </div>
+          )}
+          <label className="upload-tile" style={{ width: 120, height: 84 }}>
+            {uploadingHero ? "…" : form.hero_image_url ? "Replace" : "+ Add photo"}
+            <input type="file" accept="image/*" hidden onChange={handleHeroUpload} disabled={uploadingHero} />
+          </label>
+        </div>
+        <p className="hint">Wide photo works best. Leave empty to use a plain color banner instead.</p>
+      </div>
+      <div className="field">
+        <label>Banner Title</label>
+        <input value={form.hero_title} onChange={(e) => update("hero_title", e.target.value)} />
+      </div>
+      <div className="field">
+        <label>Banner Subtitle</label>
+        <textarea rows={2} value={form.hero_subtitle} onChange={(e) => update("hero_subtitle", e.target.value)} />
+      </div>
+      <div className="field-row">
+        <div className="field">
+          <label>Button Text</label>
+          <input value={form.hero_button_text} onChange={(e) => update("hero_button_text", e.target.value)} placeholder="Shop Now" />
+        </div>
+        <div className="field">
+          <label>Button Link</label>
+          <input value={form.hero_button_link} onChange={(e) => update("hero_button_link", e.target.value)} placeholder="/ or /sections/chains" />
+        </div>
       </div>
 
       <h3>Support Contact</h3>

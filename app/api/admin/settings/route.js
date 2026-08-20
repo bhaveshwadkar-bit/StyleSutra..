@@ -19,7 +19,12 @@ export async function PUT(request) {
     delivery_charge_text: body.delivery_charge_text,
     delivery_charge_amount: body.delivery_charge_amount,
     free_delivery_min_order: body.free_delivery_min_order,
-    low_stock_threshold: body.low_stock_threshold
+    low_stock_threshold: body.low_stock_threshold,
+    hero_image_url: body.hero_image_url,
+    hero_title: body.hero_title,
+    hero_subtitle: body.hero_subtitle,
+    hero_button_text: body.hero_button_text,
+    hero_button_link: body.hero_button_link
   }).eq("id", 1).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ settings: data });

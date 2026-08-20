@@ -24,6 +24,7 @@ export async function POST(request) {
     stock: body.stock ?? 100,
     is_active: body.is_active ?? true,
     is_featured: body.is_featured ?? false,
+    is_best_seller: body.is_best_seller ?? false,
     photos: body.photos || [],
     videos: body.videos || []
   }).select().single();

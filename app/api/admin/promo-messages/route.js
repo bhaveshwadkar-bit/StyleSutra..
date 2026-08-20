@@ -1,25 +1,21 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isAdminAuthed } from "@/lib/auth";
 
-function slugify(str) {
-  return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
 export async function GET() {
   if (!isAdminAuthed()) return Response.json({ error: "Not authorized" }, { status: 401 });
-  const { data, error } = await supabaseAdmin.from("sections").select("*").order("sort_order");
+  const { data, error } = await supabaseAdmin.from("promo_messages").select("*").order("sort_order");
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json({ sections: data });
+  return Response.json({ messages: data });
 }
 
 export async function POST(request) {
   if (!isAdminAuthed()) return Response.json({ error: "Not authorized" }, { status: 401 });
   const body = await request.json();
-  const slug = slugify(body.name);
-  const { data, error } = await supabaseAdmin.from("sections").insert({
-    name: body.name, slug, sort_order: body.sort_order ?? 99, parent_id: body.parent_id || null,
-    image_url: body.image_url || null
+  if (!body.text?.trim()) return Response.json({ error: "Message text is required" }, { status: 400 });
+  const { data, error } = await supabaseAdmin.from("promo_messages").insert({
+    text: body.text.trim(),
+    sort_order: body.sort_order ?? 99
   }).select().single();
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json({ section: data });
+  return Response.json({ message: data });
 }

@@ -15,6 +15,7 @@ export default function ProductForm({ sections, initialProduct }) {
   const [stock, setStock] = useState(initialProduct?.stock ?? 100);
   const [isActive, setIsActive] = useState(initialProduct?.is_active ?? true);
   const [isFeatured, setIsFeatured] = useState(initialProduct?.is_featured ?? false);
+  const [isBestSeller, setIsBestSeller] = useState(initialProduct?.is_best_seller ?? false);
   const [photos, setPhotos] = useState(initialProduct?.photos || []);
   const [videos, setVideos] = useState(initialProduct?.videos || []);
 
@@ -36,7 +37,7 @@ export default function ProductForm({ sections, initialProduct }) {
     const payload = {
       name, section_id: sectionId || null, description,
       price: Number(price), compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
-      stock: Number(stock), is_active: isActive, is_featured: isFeatured, photos, videos
+      stock: Number(stock), is_active: isActive, is_featured: isFeatured, is_best_seller: isBestSeller, photos, videos
     };
     try {
       const url = isEdit ? `/api/admin/products/${initialProduct.id}` : "/api/admin/products";
@@ -122,6 +123,13 @@ export default function ProductForm({ sections, initialProduct }) {
         <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
           <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} style={{ width: "auto" }} />
           Show in "Featured" row on homepage
+        </label>
+      </div>
+
+      <div className="field">
+        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+          <input type="checkbox" checked={isBestSeller} onChange={(e) => setIsBestSeller(e.target.checked)} style={{ width: "auto" }} />
+          Show in "Most Loved" row on homepage
         </label>
       </div>
 
