@@ -33,7 +33,7 @@ export default async function RootLayout({ children }) {
     <html lang="en">
       <body className={festivalActive ? "festival-theme" : ""}>
         <CartProvider>
-          {festivalActive && <FestivalBanner text={settings.festival_banner_text} />}
+          {festivalActive && <FestivalBanner text={settings.festival_banner_text} endAt={settings.festival_theme_end_at} />}
           <Header siteName={settings?.site_name || "Style Sutra"} />
           {children}
           <Footer settings={settings} />
