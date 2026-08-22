@@ -410,3 +410,37 @@ table.admin-table img { width: 44px; height: 44px; object-fit: cover; border-rad
 .gate-countdown-unit label { display: block; font-size: 11px; color: #b3a99a; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
 .gate-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
 .gate-links a { color: var(--champagne); font-size: 14px; font-weight: 600; }
+
+/* ===== Festival Theme (temporary — Raksha Bandhan) =====
+   Only applies while body has class "festival-theme", which is added/removed
+   automatically based on the admin-set end date. No existing rules below this
+   point are modified — this section only ever ADDS behavior. */
+
+body.festival-theme {
+  --rose-gold: #d84315;
+  --rose-gold-dark: #a52d0a;
+  --champagne: #ffb300;
+}
+
+.festival-banner {
+  background: linear-gradient(90deg, #d84315, #ff8f00, #d84315);
+  background-size: 200% 100%;
+  animation: festivalShimmer 6s linear infinite;
+  color: #fff8ec;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 9px 16px;
+  letter-spacing: 0.02em;
+}
+@keyframes festivalShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+body.festival-theme .site-header {
+  border-bottom: 2px solid #ff8f00;
+}
+body.festival-theme .brand span {
+  color: #ffb300;
+}

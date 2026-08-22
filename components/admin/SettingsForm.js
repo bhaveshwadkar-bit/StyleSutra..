@@ -2,6 +2,13 @@
 import { useState } from "react";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
+function toLocalInputValue(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function SettingsForm({ initialSettings }) {
   const s = initialSettings || {};
   const [form, setForm] = useState({
@@ -24,7 +31,11 @@ export default function SettingsForm({ initialSettings }) {
     hero_title: s.hero_title || "Style Sutra",
     hero_subtitle: s.hero_subtitle || "Handpicked chains, rings, charms & full chains — for him and her.",
     hero_button_text: s.hero_button_text || "Shop Now",
-    hero_button_link: s.hero_button_link || "/"
+    hero_button_link: s.hero_button_link || "/",
+    festival_theme_enabled: s.festival_theme_enabled ?? true,
+    festival_theme_name: s.festival_theme_name || "Raksha Bandhan",
+    festival_theme_end_at: toLocalInputValue(s.festival_theme_end_at) || "2026-08-29T00:00",
+    festival_banner_text: s.festival_banner_text || "🎉 Raksha Bandhan Special — celebrate the bond with a gift from Style Sutra! 🎉"
   });
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
@@ -73,10 +84,14 @@ export default function SettingsForm({ initialSettings }) {
     setError("");
     setSaved(false);
     try {
+      const payload = {
+        ...form,
+        festival_theme_end_at: form.festival_theme_end_at ? new Date(form.festival_theme_end_at).toISOString() : null
+      };
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -235,6 +250,37 @@ export default function SettingsForm({ initialSettings }) {
           style={{ maxWidth: 140 }}
         />
         <p className="hint">Shows "Only X left!" on a product when its stock drops to this number or below.</p>
+      </div>
+
+      <h3>🎉 Festival Theme (Temporary)</h3>
+      <p className="hint">
+        Adds a festive banner and color accent across your site until the date below, then automatically
+        switches back to normal — nothing else on your site changes, and no action is needed from you when it ends.
+      </p>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, cursor: "pointer" }}>
+        <input
+          type="checkbox"
+          checked={form.festival_theme_enabled}
+          onChange={(e) => update("festival_theme_enabled", e.target.checked)}
+          style={{ width: "auto" }}
+        />
+        <strong>Show festival theme</strong>
+      </label>
+      <div className="field">
+        <label>Festival Name</label>
+        <input value={form.festival_theme_name} onChange={(e) => update("festival_theme_name", e.target.value)} />
+      </div>
+      <div className="field">
+        <label>Ends On (auto-reverts after this date/time)</label>
+        <input
+          type="datetime-local"
+          value={form.festival_theme_end_at}
+          onChange={(e) => update("festival_theme_end_at", e.target.value)}
+        />
+      </div>
+      <div className="field">
+        <label>Banner Text</label>
+        <input value={form.festival_banner_text} onChange={(e) => update("festival_banner_text", e.target.value)} />
       </div>
 
       {error && <p className="error-text">{error}</p>}
